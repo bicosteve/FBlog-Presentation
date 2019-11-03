@@ -1,0 +1,31 @@
+{% extends 'layout.html' %}
+
+
+
+{% block body %}
+    <h1>Dashboard </h1>
+    <small>Welcome {{session.email}}</small>
+    <a class="btn btn-success" href="/add_article">Add Article</a>
+    <hr>
+    <table class="table table-striped">
+        <tr></tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Author</th>
+            <th>Date</th>
+            <th></th>   <!--for delete buttons-->
+            <th></th>   <!--for edit buttons-->
+        <tr></tr>
+        {% for article in articles %}
+            <tr></tr>
+                <td>{{article.id}}</td>
+                <td>{{article.title}}</td>
+                <td>{{article.author}}</td>
+                <td>{{article.create_date}}</td>
+                <td><a href="edit_article/{{article.id}}" class="btn btn-primary pull-right">Edit</a></td>
+                <td><a href="#" class="btn btn-danger ">Delete</a></td>
+                
+            <tr></tr>
+        {% endfor %}
+    </table>
+{% endblock %}
