@@ -1,0 +1,5 @@
+Flask
+passlib
+Flask-MySQLdb
+functools
+WTForms
