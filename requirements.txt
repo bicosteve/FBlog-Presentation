@@ -1,5 +1,5 @@
 Flask
 passlib
-Flask-MySQLdb
-functools
+pymysql
 WTForms
+Flask-WTF
