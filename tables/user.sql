@@ -5,7 +5,7 @@ CREATE TABLE users(
     username VARCHAR(100) NOT NULL, 
     password VARCHAR(100) NOT NULL, 
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP, 
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP, 
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX idx_users_created ON users(created_at);
