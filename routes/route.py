@@ -53,19 +53,27 @@ def register():
         name = form.name.data
         email = form.email.data
         username = form.username.data
-        password = sha256_crypt.encrypt(str(form.password.data))
+
+        password = form.password.data
+        confirm_password = form.confirm.data
+
+        if password != confirm_password:
+            flash("Passwords do not match", "danger")
+            error = "Passwords do not match!"
+            return render_template("register.html", error=error)
+
+        hashed_password = sha256_crypt.encrypt(str(form.password.data))
 
         cur = mysql.cursor()
         cur.execute(
             "INSERT INTO users(name,email,username,password, created_at, updated_at) VALUES(%s, %s, %s, %s,%s,%s)",
-            (name, email, username, password, datetime.now(), datetime.now()),
+            (name, email, username, hashed_password, datetime.now(), datetime.now()),
         )
 
         mysql.commit()
         cur.close()
 
         flash("You are now registered and can log in", "success")
-
         return redirect(url_for("login"))
     return render_template("register.html", form=form)
 
@@ -74,7 +82,7 @@ def register():
 @app.route("/articles")
 def articles():
     cur = mysql.cursor()
-    result = cur.execute("SELECT * FROM articles")
+    result = cur.execute("SELECT * FROM articles LIMIT 100")
     articles = cur.fetchall()
     cur.close()
     if result > 0:
@@ -151,7 +159,7 @@ def logout():
 @is_logged_in
 def dashboard():
     cur = mysql.cursor()
-    result = cur.execute("SELECT * FROM articles")
+    result = cur.execute("SELECT * FROM articles LIMIT 100")
     articles = cur.fetchall()
     cur.close()
     if result > 0:
