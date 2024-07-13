@@ -49,6 +49,7 @@ def about():
 @app.route("/register", methods=["GET", "POST"])
 def register():
     form = RegisterForm(request.form)
+    cur = mysql.cursor()
     if request.method == "POST" and form.validate():
         name = form.name.data
         email = form.email.data
@@ -64,7 +65,6 @@ def register():
 
         hashed_password = sha256_crypt.encrypt(str(form.password.data))
 
-        cur = mysql.cursor()
         cur.execute(
             "INSERT INTO users(name,email,username,password, created_at, updated_at) VALUES(%s, %s, %s, %s,%s,%s)",
             (name, email, username, hashed_password, datetime.now(), datetime.now()),
@@ -95,7 +95,7 @@ def articles():
 @app.route("/article/<string:id>/")
 def article(id):
     cur = mysql.cursor()
-    result = cur.execute("SELECT * FROM articles WHERE id = %s", [id])
+    result = cur.execute("SELECT * FROM articles WHERE id = %s LIMIT 1", [id])
     article = cur.fetchone()
     if result > 0:
         return render_template("article.html", article=article)
