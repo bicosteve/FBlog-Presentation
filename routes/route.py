@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from flask import (
     Flask,
     render_template,
@@ -16,7 +18,7 @@ from forms.login import LoginForm
 from forms.article import ArticleForm
 
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder="../templates", static_folder="../static")
 
 
 app.config["MYSQL_HOST"] = "localhost"
@@ -55,8 +57,8 @@ def register():
 
         cur = mysql.cursor()
         cur.execute(
-            "INSERT INTO users(name,email,username,password) VALUES(%s, %s, %s, %s)",
-            (name, email, username, password),
+            "INSERT INTO users(name,email,username,password, created_at, updated_at) VALUES(%s, %s, %s, %s,%s,%s)",
+            (name, email, username, password, datetime.now(), datetime.now()),
         )
 
         mysql.commit()
@@ -94,21 +96,22 @@ def article(id):
 @app.route("/login", methods=["GET", "POST"])
 def login():
     form = LoginForm(request.form)
+    cur = mysql.cursor()
     if request.method == "POST" and form.validate():
         email = request.form["email"]
         password_candidate = request.form["password"]
-
-        cur = mysql.connection.cursor()
         result = cur.execute("SELECT * FROM users WHERE email = %s LIMIT 1", [email])
 
         if result > 0:
             data = cur.fetchone()
             password = data["password"]
+            user_id = data["userid"]
             cur.close()
             if sha256_crypt.verify(password_candidate, password):
                 # app.logger.info('PASSWORD MATCHED')
                 session["logged_in"] = True
                 session["email"] = email
+                session["userid"] = user_id
                 flash("You are now logged in", "success")
                 return redirect(url_for("dashboard"))
             else:
@@ -170,8 +173,8 @@ def add_article():
         cur = mysql.cursor()
 
         cur.execute(
-            "INSERT INTO  articles(title, body, author) VALUES(%s, %s, %s)",
-            (title, body, session["email"]),
+            "INSERT INTO  articles(title, body, author, created_at, updated_at) VALUES(%s, %s, %s,%s,%s)",
+            (title, body, session["userid"], datetime.now(), datetime.now()),
         )
 
         mysql.commit()
@@ -202,7 +205,8 @@ def edit_article(id):
         cur = mysql.cursor()
 
         cur.execute(
-            "UPDATE articles SET title=%s, body=%s WHERE id = %s", (title, body, id)
+            "UPDATE articles SET title=%s, body=%s WHERE id = %s AND author = %s",
+            (title, body, id, session["userid"]),
         )
 
         # Commit to DB
