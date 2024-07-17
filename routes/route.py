@@ -165,7 +165,11 @@ def logout():
 @is_logged_in
 def dashboard():
     cur = mysql.cursor()
-    result = cur.execute("SELECT * FROM articles LIMIT 100")
+
+    q = """
+            SELECT articles.id, articles.title, articles.body, articles.created_at,users.name FROM articles INNER JOIN users ON users.userid = articles.author LIMIT 100
+        """
+    result = cur.execute(q)
     articles = cur.fetchall()
     cur.close()
     if result > 0:
