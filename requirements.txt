@@ -4,3 +4,4 @@ pymysql
 WTForms
 Flask-WTF
 email_validator
+cryptography
