@@ -97,8 +97,11 @@ def articles():
 # single article
 @app.route("/article/<string:id>/")
 def article(id):
+    q = """
+            SELECT articles.title, articles.body, articles.created_at, users.name FROM articles INNER JOIN users ON users.userid = articles.author WHERE articles.id = %s LIMIT 1
+        """
     cur = mysql.cursor()
-    result = cur.execute("SELECT * FROM articles WHERE id = %s LIMIT 1", [id])
+    result = cur.execute(q, [id])
     article = cur.fetchone()
     if result > 0:
         return render_template("article.html", article=article)
@@ -207,32 +210,33 @@ def add_article():
 @app.route("/edit_article/<string:id>", methods=["GET", "POST"])
 @is_logged_in
 def edit_article(id):
+    q = """
+            SELECT id, title, body FROM  articles WHERE id = %s AND author = %s LIMIT 1
+        """
     cur = mysql.cursor()
-    result = cur.execute("SELECT * FROM articles WHERE id = %s", [id])
-    article = cur.fetchone()
-    form = ArticleForm(request.form)
+    result = cur.execute(q, (id, session["userid"]))
+    row = cur.fetchone()
+    if result > 0:
+        cur.close()
+        return render_template("edit_article.html", row=row)
 
-    # populate article form fields
-    form.title.data = article["title"]
-    form.body.data = article["body"]
+    if request.method == "POST":
+        article_id = int(request.form["article_id"])
+        title = request.form["title"]
+        body = request.form["body"]
 
-    if request.method == "POST" and form.validate():
-        title = form.title.data
-        body = form.body.data
+        isValid = validate_article_form(title=title, body=body)
+        if not isValid:
+            flash("Form is invalid", "danger")
+            return render_template("edit_article.html", row=row)
 
-        # Create Cursor
-        cur = mysql.cursor()
-
-        cur.execute(
-            "UPDATE articles SET title=%s, body=%s WHERE id = %s AND author = %s",
-            (title, body, id, session["userid"]),
-        )
-
-        # Commit to DB
+        q = """
+                UPDATE articles SET title = %s, body = %s, updated_at = %s WHERE id = %s AND author = %s
+            """
+        cur.execute(q, (title, body, datetime.now(), article_id, session["userid"]))
         mysql.commit()
         cur.close()
 
         flash("Article created", "success")
-
         return redirect(url_for("dashboard"))
-    return render_template("add_article.html", form=form)
+    return render_template("edit_article.html")
