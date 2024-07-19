@@ -210,33 +210,31 @@ def add_article():
 @app.route("/edit_article/<string:id>", methods=["GET", "POST"])
 @is_logged_in
 def edit_article(id):
-    q = """
+    cur = mysql.cursor()
+    if request.method == "GET":
+        q = """
             SELECT id, title, body FROM  articles WHERE id = %s AND author = %s LIMIT 1
         """
-    cur = mysql.cursor()
-    result = cur.execute(q, (id, session["userid"]))
-    row = cur.fetchone()
-    if result > 0:
-        cur.close()
-        return render_template("edit_article.html", row=row)
-
-    if request.method == "POST":
-        article_id = int(request.form["article_id"])
-        title = request.form["title"]
-        body = request.form["body"]
-
-        isValid = validate_article_form(title=title, body=body)
-        if not isValid:
-            flash("Form is invalid", "danger")
+        result = cur.execute(q, (id, session["userid"]))
+        row = cur.fetchone()
+        if result > 0:
+            cur.close()
             return render_template("edit_article.html", row=row)
+        return render_template("edit_article.html")
 
-        q = """
-                UPDATE articles SET title = %s, body = %s, updated_at = %s WHERE id = %s AND author = %s
-            """
-        cur.execute(q, (title, body, datetime.now(), article_id, session["userid"]))
-        mysql.commit()
-        cur.close()
+    article_id = int(request.form["article_id"])
+    title = request.form["title"]
+    body = request.form["body"]
 
-        flash("Article created", "success")
-        return redirect(url_for("dashboard"))
-    return render_template("edit_article.html")
+    isValid = validate_article_form(title=title, body=body)
+    if not isValid:
+        flash("Form is invalid", "danger")
+        return render_template("edit_article.html", row=row)
+    q = """
+            UPDATE articles SET title = %s, body = %s, updated_at = %s WHERE id = %s AND author = %s
+        """
+    cur.execute(q, (title, body, datetime.now(), article_id, session["userid"]))
+    mysql.commit()
+    cur.close()
+    flash("Article updated", "success")
+    return redirect(url_for("dashboard"))
