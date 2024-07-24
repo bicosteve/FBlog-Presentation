@@ -1,4 +1,5 @@
 from datetime import datetime
+from os import environ as env
 
 from flask import (
     Flask,
@@ -12,22 +13,21 @@ from flask import (
 from functools import wraps
 from passlib.hash import sha256_crypt
 import pymysql
+from dotenv import load_dotenv
 
 
-from helpers.service import validate_register_form
-from helpers.service import validate_login_form
-from helpers.service import validate_article_form
-from forms.article import ArticleForm
+from helpers.service import Helpers
 
 
 app = Flask(__name__, template_folder="../templates", static_folder="../static")
+load_dotenv()  # loading the environment variables
 
 
-app.config["MYSQL_HOST"] = "localhost"
-app.config["MYSQL_USER"] = "bico"
-app.config["MYSQL_PASSWORD"] = "Betika@254"
-app.config["MYSQL_DB"] = "blogs_db"
-app.config["MYSQL_CURSORCLASS"] = "DictCursor"
+app.config["MYSQL_HOST"] = env["MYSQL_HOST"]
+app.config["MYSQL_USER"] = env["MYSQL_USER"]
+app.config["MYSQL_PASSWORD"] = env["MYSQL_PASSWORD"]
+app.config["MYSQL_DB"] = env["MYSQL_DB"]
+app.config["MYSQL_CURSORCLASS"] = env["MYSQL_CURSORCLASS"]
 
 
 mysql = pymysql.connect(
@@ -58,7 +58,7 @@ def register():
         password = request.form["password"]
         confirm_password = request.form["confirm_password"]
 
-        isValid = validate_register_form(
+        isValid = Helpers.validate_register_form(
             name, email, username, password, confirm_password
         )
 
@@ -113,7 +113,7 @@ def login():
     if request.method == "POST":
         email = request.form["email"]
         password_candidate = request.form["password"]
-        isValid = validate_login_form(email, password_candidate)
+        isValid = Helpers.validate_login_form(email, password_candidate)
         if not isValid:
             error = "Email and password do not match"
             return render_template("login.html", error=error)
@@ -189,7 +189,7 @@ def add_article():
         title = request.form["title"]
         body = request.form["body"]
 
-        isValid = validate_article_form(title=title, body=body)
+        isValid = Helpers.validate_article_form(title=title, body=body)
         if not isValid:
             return render_template("add_article.html", error="All fields required")
 
@@ -226,7 +226,7 @@ def edit_article(id):
     title = request.form["title"]
     body = request.form["body"]
 
-    isValid = validate_article_form(title=title, body=body)
+    isValid = Helpers.validate_article_form(title=title, body=body)
     if not isValid:
         flash("Form is invalid", "danger")
         return render_template("edit_article.html", row=row)
@@ -237,4 +237,21 @@ def edit_article(id):
     mysql.commit()
     cur.close()
     flash("Article updated", "success")
+    return redirect(url_for("dashboard"))
+
+
+@app.route("/delete_article/<string:id>", methods=["GET"])
+@is_logged_in
+def delete_article(id):
+    cur = mysql.cursor()
+    q = "DELETE FROM articles WHERE articles.id = %s AND articles.author = %s"
+    result = cur.execute(q, (id, session["userid"]))
+    mysql.commit()
+    cur.close()
+
+    if result > 0:
+        flash("Article successfully deleted", "success")
+        return redirect(url_for("dashboard"))
+
+    flash("Article not deleted", "danger")
     return redirect(url_for("dashboard"))
