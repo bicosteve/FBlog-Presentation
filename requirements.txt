@@ -1,0 +1,8 @@
+Flask
+passlib
+pymysql
+WTForms
+Flask-WTF
+email_validator
+cryptography
+python-dotenv

@@ -1,11 +1,10 @@
 {% extends 'layout.html' %}
 
-
 {% block body %}
-    <h1>{{article.title}}</h1>
-    <small>By {{article.author}} on {{article.create_date}}</small>
+    <h1>{{article[0]}}</h1>
+    <small>By {{article[3]}} on {{article[2]}}</small>
     <hr>
     <div>
-        {{article.body}}
+        {{article[1]}}
     </div>
 {% endblock %}

@@ -2,15 +2,17 @@
 
 
 {% block body %}
-    <h1>Articles</h1>
+    <h1>Add Article</h1>
     {% from "includes/_formhelpers.html" import render_field %}
     <form method="POST" action="">
         <div class="form-group">
-            {{render_field(form.title, class_="form-control")}}
+            <label for="title">Title</label>
+            <input type="text" class="form-control" id="title" name="title">
         </div>
         <div class="form-group">
-            {{render_field(form.body, class_="form-control", id="editor")}}
+            <label for="editor">Body</label>
+            <textarea name="body" id="editor"></textarea>
         </div>
-        <p><input type="submit" class="btn btn-primary" value="Post"></p>
+        <button type="submit" class="btn btn-primary">Post</button>
     </form>
 {% endblock %}

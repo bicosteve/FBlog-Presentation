@@ -1,0 +1,19 @@
+{% extends 'layout.html' %}
+
+
+{% block body %}
+    <h1>Edit Article</h1>
+    {% from "includes/_formhelpers.html" import render_field %}
+    <form method="POST" action="#">
+        <div class="form-group">
+            <label for="title">Title</label>
+            <input type="hidden" name="article_id" value="{{row[0]}}"/>
+            <input type="text" class="form-control" id="title" name="title" value="{{row[1]}}">
+        </div>
+        <div class="form-group">
+            <label for="editor">Body</label>
+            <textarea name="body" id="editor">{{row[2]}}</textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Update</button>
+    </form>
+{% endblock %}
